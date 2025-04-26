@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:craftshop/core/di/service_locator.dart';
+import 'package:craftshop/utils/logger.dart';
 import 'package:craftshop/domain/models/product.dart';
 import 'package:craftshop/domain/repositories/product_repository.dart';
 import 'package:craftshop/domain/repositories/category_repository.dart';
@@ -8,6 +9,7 @@ enum ProductState { initial, loading, loaded, error }
 
 class ProductViewModel {
   final List<Product> products;
+  final List<Product> filteredProducts;
   final Product? selectedProduct;
   final ProductState state;
   final String? errorMessage;
@@ -15,6 +17,7 @@ class ProductViewModel {
 
   const ProductViewModel({
     this.products = const [],
+    this.filteredProducts = const [],
     this.selectedProduct,
     this.state = ProductState.initial,
     this.errorMessage,
@@ -23,6 +26,7 @@ class ProductViewModel {
 
   ProductViewModel copyWith({
     List<Product>? products,
+    List<Product>? filteredProducts,
     Product? selectedProduct,
     ProductState? state,
     String? errorMessage,
@@ -30,6 +34,7 @@ class ProductViewModel {
   }) {
     return ProductViewModel(
       products: products ?? this.products,
+      filteredProducts: filteredProducts ?? this.filteredProducts,
       selectedProduct: selectedProduct,
       state: state ?? this.state,
       errorMessage: errorMessage,
@@ -41,14 +46,14 @@ class ProductViewModel {
 class ProductNotifier extends StateNotifier<ProductViewModel> {
   final ProductRepository _productRepository;
   final CategoryRepository _categoryRepository;
+  final _logger = AppLogger.getLogger('ProductNotifier');
 
   ProductNotifier({
     ProductRepository? productRepository,
     CategoryRepository? categoryRepository,
-  })
-      : _productRepository = productRepository ?? getIt<ProductRepository>(),
-        _categoryRepository = categoryRepository ?? getIt<CategoryRepository>(),
-        super(const ProductViewModel()) {
+  }) : _productRepository = productRepository ?? getIt<ProductRepository>(),
+       _categoryRepository = categoryRepository ?? getIt<CategoryRepository>(),
+       super(const ProductViewModel()) {
     loadProducts();
     loadCategories();
   }
@@ -57,10 +62,12 @@ class ProductNotifier extends StateNotifier<ProductViewModel> {
     try {
       state = state.copyWith(state: ProductState.loading);
       final products = await _productRepository.getAllProducts();
-      
+
       // Add category names to products
-      final productsWithCategoryNames = await _addCategoryNamesToProducts(products);
-      
+      final productsWithCategoryNames = await _addCategoryNamesToProducts(
+        products,
+      );
+
       state = state.copyWith(
         products: productsWithCategoryNames,
         state: ProductState.loaded,
@@ -73,11 +80,15 @@ class ProductNotifier extends StateNotifier<ProductViewModel> {
     }
   }
 
-  Future<List<Product>> _addCategoryNamesToProducts(List<Product> products) async {
+  Future<List<Product>> _addCategoryNamesToProducts(
+    List<Product> products,
+  ) async {
     final categoryMap = <String, String>{};
     for (final product in products) {
       if (!categoryMap.containsKey(product.categoryId)) {
-        final category = await _categoryRepository.getCategoryById(product.categoryId);
+        final category = await _categoryRepository.getCategoryById(
+          product.categoryId,
+        );
         if (category != null) {
           categoryMap[product.categoryId] = category.name;
         }
@@ -94,16 +105,15 @@ class ProductNotifier extends StateNotifier<ProductViewModel> {
   Future<void> loadCategories() async {
     try {
       final categories = await _categoryRepository.getAllCategories();
-      final categoryList = categories
-          .map((category) => {
-                'id': category.id,
-                'name': category.name,
-              })
-          .toList();
+      final categoryList =
+          categories
+              .map((category) => {'id': category.id, 'name': category.name})
+              .toList();
+      _logger.info('Categories loaded: $categoryList');
       state = state.copyWith(categories: categoryList);
     } catch (e) {
       // Just log the error, don't change state since this is a secondary operation
-      print('Error loading categories: $e');
+      _logger.warning('Error loading categories: $e');
     }
   }
 
@@ -164,7 +174,7 @@ class ProductNotifier extends StateNotifier<ProductViewModel> {
     try {
       state = state.copyWith(state: ProductState.loading);
       List<Product> products;
-      
+
       if (categoryId == 'all') {
         products = await _productRepository.getAllProducts();
       } else {
@@ -172,8 +182,10 @@ class ProductNotifier extends StateNotifier<ProductViewModel> {
       }
 
       // Add category names to products
-      final productsWithCategoryNames = await _addCategoryNamesToProducts(products);
-      
+      final productsWithCategoryNames = await _addCategoryNamesToProducts(
+        products,
+      );
+
       state = state.copyWith(
         products: productsWithCategoryNames,
         state: ProductState.loaded,
@@ -185,9 +197,64 @@ class ProductNotifier extends StateNotifier<ProductViewModel> {
       );
     }
   }
+
+  // Search products by name
+  void searchProducts(String query) {
+    if (query.isEmpty) {
+      // If query is empty, reset to show all products
+      state = state.copyWith(filteredProducts: const []);
+      return;
+    }
+
+    final lowercaseQuery = query.toLowerCase();
+    final filtered =
+        state.products
+            .where(
+              (product) =>
+                  product.name.toLowerCase().contains(lowercaseQuery) ||
+                  product.description.toLowerCase().contains(lowercaseQuery),
+            )
+            .toList();
+
+    state = state.copyWith(filteredProducts: filtered);
+  }
+  
+  // Update product stock quantity
+  Future<bool> updateProductStock(String productId, int quantityToReduce) async {
+    try {
+      // Find the product in current state
+      final product = state.products.firstWhere(
+        (p) => p.id == productId,
+        orElse: () => throw Exception('Product not found'),
+      );
+      
+      // Check if we have enough inventory
+      if (product.stock < quantityToReduce) {
+        _logger.warning('Not enough stock for product ${product.name}');
+        return false;
+      }
+      
+      // Calculate new stock level
+      final newStock = product.stock - quantityToReduce;
+      
+      // Create updated product with new stock level
+      final updatedProduct = product.copyWith(stock: newStock);
+      
+      // Update in repository
+      await _productRepository.updateProduct(updatedProduct);
+      
+      // Refresh product list to reflect changes
+      await loadProducts();
+      
+      return true;
+    } catch (e) {
+      _logger.severe('Error updating product stock: $e');
+      return false;
+    }
+  }
 }
 
 final productProvider =
     StateNotifierProvider<ProductNotifier, ProductViewModel>(
-  (ref) => ProductNotifier(),
-);
+      (ref) => ProductNotifier(),
+    );

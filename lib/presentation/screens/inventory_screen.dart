@@ -141,7 +141,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                     value: category['id'] as String,
                     child: Text(category['name'] as String),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),

@@ -1,6 +1,6 @@
 name: craftshop
 description: "POS application for desktop"
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
@@ -26,6 +26,7 @@ dependencies:
   json_annotation: ^4.8.1
   uuid: ^4.3.3
   get_it: ^7.6.7
+  logging: ^1.2.0
 
 dev_dependencies:
   flutter_test:
