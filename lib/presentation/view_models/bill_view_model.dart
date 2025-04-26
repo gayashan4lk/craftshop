@@ -67,16 +67,12 @@ class BillState {
 
 class BillNotifier extends StateNotifier<BillState> {
   final BillRepository _billRepository;
-  final LineItemRepository _lineItemRepository;
-  final ProductRepository _productRepository;
 
   BillNotifier({
     BillRepository? billRepository,
     LineItemRepository? lineItemRepository,
     ProductRepository? productRepository,
   }) : _billRepository = billRepository ?? getIt<BillRepository>(),
-       _lineItemRepository = lineItemRepository ?? getIt<LineItemRepository>(),
-       _productRepository = productRepository ?? getIt<ProductRepository>(),
        super(const BillState());
 
   Future<void> loadBills() async {
