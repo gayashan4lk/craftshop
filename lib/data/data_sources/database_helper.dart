@@ -4,7 +4,7 @@ import 'package:path_provider/path_provider.dart';
 
 class DatabaseHelper {
   static const _databaseName = "craftshop.db";
-  static const _databaseVersion = 2;
+  static const _databaseVersion = 3;
   
   // Singleton pattern
   DatabaseHelper._privateConstructor();
@@ -44,12 +44,24 @@ class DatabaseHelper {
     
     // Create products table
     await _createProductsTable(db);
+    
+    // Create bills table
+    await _createBillsTable(db);
+    
+    // Create line items table
+    await _createLineItemsTable(db);
   }
   
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       // Add products table in version 2
       await _createProductsTable(db);
+    }
+    
+    if (oldVersion < 3) {
+      // Add bills and line items tables in version 3
+      await _createBillsTable(db);
+      await _createLineItemsTable(db);
     }
   }
   
@@ -116,5 +128,54 @@ class DatabaseHelper {
     final db = await database;
     final result = await db.rawQuery('SELECT COUNT(*) FROM $table');
     return Sqflite.firstIntValue(result) ?? 0;
+  }
+  
+  Future<List<Map<String, dynamic>>> rawQuery(String query, [List<dynamic>? arguments]) async {
+    final db = await database;
+    return await db.rawQuery(query, arguments);
+  }
+  
+  Future<void> rawExecute(String query, [List<dynamic>? arguments]) async {
+    final db = await database;
+    await db.execute(query, arguments);
+  }
+  
+  Future<Batch> beginBatch() async {
+    final db = await database;
+    return db.batch();
+  }
+  
+  Future<List<Object?>> commitBatch(Batch batch) async {
+    return await batch.commit();
+  }
+  
+  Future<void> _createBillsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE bills(
+        id TEXT PRIMARY KEY,
+        date INTEGER NOT NULL,
+        subtotal REAL NOT NULL,
+        tax_amount REAL NOT NULL,
+        discount_amount REAL NOT NULL,
+        total_amount REAL NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+  }
+  
+  Future<void> _createLineItemsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE line_items(
+        id TEXT PRIMARY KEY,
+        bill_id TEXT NOT NULL,
+        product_id TEXT NOT NULL,
+        quantity INTEGER NOT NULL,
+        unit_price REAL NOT NULL,
+        discount REAL NOT NULL,
+        total_price REAL NOT NULL,
+        FOREIGN KEY (bill_id) REFERENCES bills (id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE RESTRICT
+      )
+    ''');
   }
 }

@@ -8,6 +8,7 @@ enum ProductState { initial, loading, loaded, error }
 
 class ProductViewModel {
   final List<Product> products;
+  final List<Product> filteredProducts;
   final Product? selectedProduct;
   final ProductState state;
   final String? errorMessage;
@@ -15,6 +16,7 @@ class ProductViewModel {
 
   const ProductViewModel({
     this.products = const [],
+    this.filteredProducts = const [],
     this.selectedProduct,
     this.state = ProductState.initial,
     this.errorMessage,
@@ -23,6 +25,7 @@ class ProductViewModel {
 
   ProductViewModel copyWith({
     List<Product>? products,
+    List<Product>? filteredProducts,
     Product? selectedProduct,
     ProductState? state,
     String? errorMessage,
@@ -30,6 +33,7 @@ class ProductViewModel {
   }) {
     return ProductViewModel(
       products: products ?? this.products,
+      filteredProducts: filteredProducts ?? this.filteredProducts,
       selectedProduct: selectedProduct,
       state: state ?? this.state,
       errorMessage: errorMessage,
@@ -184,6 +188,27 @@ class ProductNotifier extends StateNotifier<ProductViewModel> {
         errorMessage: e.toString(),
       );
     }
+  }
+
+  // Search products by name
+  void searchProducts(String query) {
+    if (query.isEmpty) {
+      // If query is empty, reset to show all products
+      state = state.copyWith(
+        filteredProducts: const [],
+      );
+      return;
+    }
+
+    final lowercaseQuery = query.toLowerCase();
+    final filtered = state.products.where((product) => 
+      product.name.toLowerCase().contains(lowercaseQuery) ||
+      product.description.toLowerCase().contains(lowercaseQuery)
+    ).toList();
+    
+    state = state.copyWith(
+      filteredProducts: filtered,
+    );
   }
 }
 
