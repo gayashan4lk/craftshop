@@ -1,5 +1,5 @@
 name: craftshop
-description: "A new Flutter project."
+description: "POS application for desktop"
 publish_to: 'none'
 version: 0.1.0
 
@@ -9,6 +9,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  google_fonts: ^6.2.1
+  flutter_riverpod: ^2.5.1
+  fl_chart: ^0.66.2
+  data_table_2: ^2.5.11
+  intl: ^0.18.0
+  window_size:
+    git:
+      url: https://github.com/google/flutter-desktop-embedding.git
+      path: plugins/window_size
+      ref: 6c66ad23ee79749f30a8eece542cf54eaf157ed8
 
 dev_dependencies:
   flutter_test:
@@ -17,3 +27,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/
