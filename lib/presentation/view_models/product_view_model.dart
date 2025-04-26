@@ -109,6 +109,7 @@ class ProductNotifier extends StateNotifier<ProductViewModel> {
           categories
               .map((category) => {'id': category.id, 'name': category.name})
               .toList();
+      _logger.info('Categories loaded: $categoryList');
       state = state.copyWith(categories: categoryList);
     } catch (e) {
       // Just log the error, don't change state since this is a secondary operation
