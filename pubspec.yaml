@@ -19,11 +19,21 @@ dependencies:
       url: https://github.com/google/flutter-desktop-embedding.git
       path: plugins/window_size
       ref: 6c66ad23ee79749f30a8eece542cf54eaf157ed8
+  sqflite: ^2.3.2
+  path: ^1.8.3
+  path_provider: ^2.1.2
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.8.1
+  uuid: ^4.3.3
+  get_it: ^7.6.7
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  freezed: ^2.4.7
+  json_serializable: ^6.7.1
+  build_runner: ^2.4.8
 
 flutter:
   uses-material-design: true
