@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:craftshop/domain/models/bill.dart';
-import 'package:craftshop/domain/models/line_item.dart';
 import 'package:craftshop/domain/models/product.dart';
 import 'package:craftshop/presentation/view_models/bill_view_model.dart';
 import 'package:craftshop/presentation/view_models/product_view_model.dart'
-    show ProductViewModel, productProvider, ProductState;
+    show productProvider, ProductState;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -476,6 +474,75 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         final billState = ref.watch(billProvider);
         final hasItems = billState.currentLineItems.isNotEmpty;
 
+        // Handle different bill creation states
+        switch (billState.creationStatus) {
+          case BillCreationStatus.loading:
+            // Show loading state
+            return const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 8),
+                  Text('Creating bill...'),
+                ],
+              ),
+            );
+
+          case BillCreationStatus.success:
+            // Show success dialog when bill is created
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (billState.createdBillId != null) {
+                showDialog(
+                  context: context,
+                  builder: (ctx) {
+                    return AlertDialog(
+                      title: const Text('Bill Completed'),
+                      content: Text(
+                        'Bill #${billState.createdBillId} has been created successfully.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            ref
+                                .read(billProvider.notifier)
+                                .resetCreationStatus();
+                          },
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              }
+            });
+            // Fall through to show regular buttons
+            break;
+
+          case BillCreationStatus.error:
+            // Show error snackbar
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Error creating bill: ${billState.errorMessage}',
+                  ),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              // Reset status after showing error
+              ref.read(billProvider.notifier).resetCreationStatus();
+            });
+            // Fall through to show regular buttons
+            break;
+
+          case BillCreationStatus.idle:
+            // Default no-op for idle state
+            break;
+        }
+
+        // Show regular buttons for idle state or after handling success/error
         return Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -502,51 +569,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _createBill(BuildContext context) async {
-    final billNotifier = ref.read(billProvider.notifier);
-
-    try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder:
-            (context) => const AlertDialog(
-              title: Text('Creating Bill..'),
-              content: Center(child: CircularProgressIndicator()),
-            ),
-      );
-
-      final billId = await billNotifier.saveBill();
-
-      if (!mounted) return;
-
-      // Close the loading dialog first
-      Navigator.of(context).pop();
-
-      // Show success dialog
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('Bill Completed'),
-            content: Text('Bill #$billId has been created successfully.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error creating bill: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+  void _createBill(BuildContext context) {
+    // Use the notifier's createBillWithUIStates method to handle the async logic
+    // This avoids BuildContext async gap issues entirely
+    ref.read(billProvider.notifier).createBillWithUIStates();
   }
 }

@@ -7,6 +7,8 @@ import 'package:craftshop/domain/repositories/product_repository.dart';
 import 'package:craftshop/domain/models/product.dart';
 import 'package:craftshop/core/di/service_locator.dart';
 
+enum BillCreationStatus { idle, loading, success, error }
+
 class BillState {
   final List<Bill> bills;
   final List<LineItem> currentLineItems;
@@ -17,6 +19,8 @@ class BillState {
   final bool isLoading;
   final Bill? selectedBill;
   final String? errorMessage;
+  final BillCreationStatus creationStatus;
+  final String? createdBillId;
 
   const BillState({
     this.bills = const [],
@@ -28,6 +32,8 @@ class BillState {
     this.isLoading = false,
     this.selectedBill,
     this.errorMessage,
+    this.creationStatus = BillCreationStatus.idle,
+    this.createdBillId,
   });
 
   BillState copyWith({
@@ -40,6 +46,8 @@ class BillState {
     bool? isLoading,
     Bill? selectedBill,
     String? errorMessage,
+    BillCreationStatus? creationStatus,
+    String? createdBillId,
   }) {
     return BillState(
       bills: bills ?? this.bills,
@@ -51,6 +59,8 @@ class BillState {
       isLoading: isLoading ?? this.isLoading,
       selectedBill: selectedBill ?? this.selectedBill,
       errorMessage: errorMessage,
+      creationStatus: creationStatus ?? this.creationStatus,
+      createdBillId: createdBillId ?? this.createdBillId,
     );
   }
 }
@@ -64,26 +74,19 @@ class BillNotifier extends StateNotifier<BillState> {
     BillRepository? billRepository,
     LineItemRepository? lineItemRepository,
     ProductRepository? productRepository,
-  })
-      : _billRepository = billRepository ?? getIt<BillRepository>(),
-        _lineItemRepository = lineItemRepository ?? getIt<LineItemRepository>(),
-        _productRepository = productRepository ?? getIt<ProductRepository>(),
-        super(const BillState());
+  }) : _billRepository = billRepository ?? getIt<BillRepository>(),
+       _lineItemRepository = lineItemRepository ?? getIt<LineItemRepository>(),
+       _productRepository = productRepository ?? getIt<ProductRepository>(),
+       super(const BillState());
 
   Future<void> loadBills() async {
     state = state.copyWith(isLoading: true);
 
     try {
       final bills = await _billRepository.getAllBills();
-      state = state.copyWith(
-        bills: bills,
-        isLoading: false,
-      );
+      state = state.copyWith(bills: bills, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
       rethrow;
     }
   }
@@ -92,16 +95,13 @@ class BillNotifier extends StateNotifier<BillState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      final bill = await _billRepository.getBillById(id, includeLineItems: true);
-      state = state.copyWith(
-        selectedBill: bill,
-        isLoading: false,
+      final bill = await _billRepository.getBillById(
+        id,
+        includeLineItems: true,
       );
+      state = state.copyWith(selectedBill: bill, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
       rethrow;
     }
   }
@@ -123,7 +123,7 @@ class BillNotifier extends StateNotifier<BillState> {
   Future<void> addLineItemFromProduct(Product product, int quantity) async {
     // Create a temporary bill ID for the line item
     const tempBillId = 'temp';
-    
+
     final lineItem = LineItem.create(
       billId: tempBillId,
       productId: product.id,
@@ -131,7 +131,7 @@ class BillNotifier extends StateNotifier<BillState> {
       quantity: quantity,
       unitPrice: product.price,
     );
-    
+
     addLineItem(lineItem);
   }
 
@@ -152,14 +152,13 @@ class BillNotifier extends StateNotifier<BillState> {
   }
 
   void _recalculateAmounts(List<LineItem> lineItems) {
-    final subtotal = lineItems.fold(
-        0.0, (sum, item) => sum + item.totalPrice);
-    
+    final subtotal = lineItems.fold(0.0, (sum, item) => sum + item.totalPrice);
+
     // Apply default tax rate of 7%
     final taxAmount = subtotal * 0.07;
-    
+
     final totalAmount = subtotal + taxAmount - state.discountAmount;
-    
+
     state = state.copyWith(
       currentLineItems: lineItems,
       subtotal: subtotal,
@@ -187,22 +186,25 @@ class BillNotifier extends StateNotifier<BillState> {
     );
 
     // Update line items with the new bill ID
-    final lineItems = state.currentLineItems.map((item) => 
-      LineItem.create(
-        billId: bill.id,
-        productId: item.productId,
-        productName: item.productName,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        discount: item.discount,
-      )
-    ).toList();
+    final lineItems =
+        state.currentLineItems
+            .map(
+              (item) => LineItem.create(
+                billId: bill.id,
+                productId: item.productId,
+                productName: item.productName,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                discount: item.discount,
+              ),
+            )
+            .toList();
 
     final billId = await _billRepository.addBill(bill, lineItems);
-    
+
     // Reset current bill state
     _recalculateAmounts([]);
-    
+
     return billId;
   }
 
@@ -213,6 +215,50 @@ class BillNotifier extends StateNotifier<BillState> {
   Future<void> deleteBill(String id) async {
     await _billRepository.deleteBill(id);
     await loadBills(); // Refresh the list
+  }
+
+  // New method for creating bill with UI state management
+  Future<void> createBillWithUIStates() async {
+    try {
+      // Set state to loading
+      state = state.copyWith(
+        creationStatus: BillCreationStatus.loading,
+        errorMessage: null,
+        createdBillId: null,
+      );
+
+      if (state.currentLineItems.isEmpty) {
+        state = state.copyWith(
+          creationStatus: BillCreationStatus.error,
+          errorMessage: 'Cannot save a bill without line items',
+        );
+        return;
+      }
+
+      // Save the bill and get ID
+      final billId = await saveBill();
+
+      // Update state with success
+      state = state.copyWith(
+        creationStatus: BillCreationStatus.success,
+        createdBillId: billId,
+      );
+    } catch (e) {
+      // Update state with error
+      state = state.copyWith(
+        creationStatus: BillCreationStatus.error,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+
+  // Reset creation status to idle
+  void resetCreationStatus() {
+    state = state.copyWith(
+      creationStatus: BillCreationStatus.idle,
+      errorMessage: null,
+      createdBillId: null,
+    );
   }
 }
 
