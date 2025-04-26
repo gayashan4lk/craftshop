@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:craftshop/presentation/screens/home_screen.dart';
+import 'package:craftshop/presentation/screens/dashboard_screen.dart';
 import 'package:craftshop/presentation/screens/inventory_screen.dart';
 import 'package:craftshop/presentation/screens/reports_screen.dart';
 import 'package:craftshop/presentation/screens/categories_screen.dart';
@@ -25,9 +26,7 @@ class _MainScreenState extends State<MainScreen> {
             selectedItem: _selectedItem,
             onItemSelected: _handleNavigationItemSelected,
           ),
-          Expanded(
-            child: _buildContent(),
-          ),
+          Expanded(child: _buildContent()),
         ],
       ),
     );
@@ -43,6 +42,8 @@ class _MainScreenState extends State<MainScreen> {
     switch (_selectedItem) {
       case NavigationItem.home:
         return const HomeScreen();
+      case NavigationItem.dashboard:
+        return const DashboardScreen();
       case NavigationItem.inventory:
         return const InventoryScreen();
       case NavigationItem.categories:
