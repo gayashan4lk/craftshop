@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum NavigationItem {
-  home,
-  inventory,
-  reports,
-}
+enum NavigationItem { home, inventory, reports }
 
 class SidebarNavigation extends StatelessWidget {
   final NavigationItem selectedItem;
@@ -39,11 +35,7 @@ class SidebarNavigation extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
-          Icon(
-            Icons.storefront_rounded,
-            color: Colors.white,
-            size: 32,
-          ),
+          Icon(Icons.storefront_rounded, color: Colors.white, size: 32),
           SizedBox(width: 12),
           Text(
             'CraftShop POS',
@@ -90,9 +82,7 @@ class SidebarNavigation extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: isSelected 
-            ? Colors.white.withOpacity(0.1) 
-            : Colors.transparent,
+        color: isSelected ? Colors.white.withAlpha(26) : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Material(
@@ -104,18 +94,15 @@ class SidebarNavigation extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
-                Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 20,
-                ),
+                Icon(icon, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 Text(
                   title,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
               ],
@@ -135,10 +122,7 @@ class SidebarNavigation extends StatelessWidget {
           CircleAvatar(
             backgroundColor: Colors.white24,
             radius: 20,
-            child: Icon(
-              Icons.person,
-              color: Colors.white,
-            ),
+            child: Icon(Icons.person, color: Colors.white),
           ),
           SizedBox(width: 12),
           Expanded(
@@ -155,10 +139,7 @@ class SidebarNavigation extends StatelessWidget {
                 ),
                 Text(
                   'Store Manager',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),

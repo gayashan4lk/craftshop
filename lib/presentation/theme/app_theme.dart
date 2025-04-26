@@ -20,8 +20,9 @@ class AppTheme {
       secondary: secondaryColor,
       tertiary: accentColor,
       error: errorColor,
-      background: backgroundColor,
+      // Using surfaceContainerLowest instead of deprecated background
       surface: surfaceColor,
+      surfaceContainerLowest: backgroundColor,
     ),
     scaffoldBackgroundColor: backgroundColor,
     appBarTheme: const AppBarTheme(
@@ -76,7 +77,7 @@ class AppTheme {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
     dataTableTheme: const DataTableThemeData(
-      headingRowColor: MaterialStatePropertyAll(Color(0xFFF5F7FA)),
+      headingRowColor: WidgetStatePropertyAll(Color(0xFFF5F7FA)),
     ),
   );
 }

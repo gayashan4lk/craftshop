@@ -153,7 +153,7 @@ class HomeScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
+                      color: color.withAlpha(26),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -243,7 +243,7 @@ class HomeScreen extends StatelessWidget {
                 LineChartData(
                   lineTouchData: LineTouchData(
                     touchTooltipData: LineTouchTooltipData(
-                      tooltipBgColor: Colors.white.withOpacity(0.8),
+                      tooltipBgColor: Colors.white.withAlpha(204),
                       tooltipRoundedRadius: 8,
                     ),
                   ),
@@ -301,8 +301,8 @@ class HomeScreen extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            const Color(0xFF4D8AD3).withOpacity(0.3),
-                            const Color(0xFF4D8AD3).withOpacity(0.0),
+                            const Color(0xFF4D8AD3).withAlpha(77),
+                            const Color(0xFF4D8AD3).withAlpha(0),
                           ],
                         ),
                       ),
