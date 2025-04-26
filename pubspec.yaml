@@ -26,7 +26,6 @@ dependencies:
   json_annotation: ^4.8.1
   uuid: ^4.3.3
   get_it: ^7.6.7
-  #provider: ^6.1.4
 
 dev_dependencies:
   flutter_test:
