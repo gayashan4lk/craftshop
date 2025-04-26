@@ -49,14 +49,11 @@ extension CategoryColorExtension on Category {
 
   static Category fromMap(Map<String, dynamic> map) {
     return Category(
-      id: map['id']?.toString() ?? const Uuid().v4(),
-      name: map['name']?.toString() ?? '',
-      description: map['description']?.toString() ?? '',
-      color:
-          map['color_value'] != null
-              ? Color(map['color_value'] as int)
-              : Colors.blue,
-      itemCount: map['item_count'] != null ? map['item_count'] as int : 0,
+      id: map['id'] as String,
+      name: map['name'] as String,
+      description: map['description'] as String,
+      color: Color(map['color_value'] as int),
+      itemCount: map['item_count'] as int,
     );
   }
 }
