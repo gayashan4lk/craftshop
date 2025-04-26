@@ -75,23 +75,13 @@ class BillRepositoryImpl implements BillRepository {
       return {};
     }
     
-    // Prepare placeholders for SQL query (?,?,?) based on number of bill IDs
-    final placeholders = billIds.map((_) => '?').join(',');
-    
-    // Query to count line items per bill
-    final query = '''
-      SELECT bill_id, COUNT(*) as item_count 
-      FROM line_items 
-      WHERE bill_id IN ($placeholders) 
-      GROUP BY bill_id
-    ''';
-    
-    final rows = await _databaseHelper.rawQuery(query, billIds);
-    
-    // Convert to map of bill_id -> count
+    // Instead of a complex query, just iterate through the bills and count items
     final countMap = <String, int>{};
-    for (final row in rows) {
-      countMap[row['bill_id'] as String] = row['item_count'] as int;
+    
+    for (final billId in billIds) {
+      // Get all line items for this bill 
+      final lineItems = await _lineItemRepository.getLineItemsByBillId(billId);
+      countMap[billId] = lineItems.length;
     }
     
     return countMap;

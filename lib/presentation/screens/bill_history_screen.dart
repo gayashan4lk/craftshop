@@ -29,35 +29,38 @@ class _BillHistoryScreenState extends ConsumerState<BillHistoryScreen> {
       ref.read(billProvider.notifier).loadBills();
     });
   }
-  
+
   // Map to store line item counts by bill ID
   final Map<String, int> _billItemCounts = {};
-  
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Listen for changes in bill state and update when bill list loads
     final billState = ref.watch(billProvider);
-    
+
     if (!billState.isLoading && billState.bills.isNotEmpty) {
       // If we have bills but no item counts, load them
       if (_billItemCounts.isEmpty) {
         _loadLineItemCounts(billState.bills);
       }
     }
-    
+
     // Also update when a bill is selected with line items
-    if (billState.selectedBill != null && billState.selectedBill!.lineItems.isNotEmpty) {
+    if (billState.selectedBill != null &&
+        billState.selectedBill!.lineItems.isNotEmpty) {
       final bill = billState.selectedBill!;
       _billItemCounts[bill.id] = bill.lineItems.length;
     }
   }
-  
+
   // Load line item counts for all bills from the database
   Future<void> _loadLineItemCounts(List<Bill> bills) async {
     final billIds = bills.map((bill) => bill.id).toList();
-    final counts = await ref.read(billProvider.notifier).getLineItemCountsForBills(billIds);
-    
+    final counts = await ref
+        .read(billProvider.notifier)
+        .getLineItemCountsForBills(billIds);
+
     setState(() {
       _billItemCounts.addAll(counts);
     });
