@@ -15,7 +15,9 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
   void initState() {
     super.initState();
     // Load categories when screen initializes
-    Future.microtask(() => ref.read(categoryProvider.notifier).loadCategories());
+    Future.microtask(
+      () => ref.read(categoryProvider.notifier).loadCategories(),
+    );
   }
 
   final TextEditingController _nameController = TextEditingController();
@@ -29,7 +31,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
     _descriptionController.dispose();
     super.dispose();
   }
-  
+
   void _resetForm() {
     _nameController.clear();
     _descriptionController.clear();
@@ -42,10 +44,10 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
 
   void _saveCategory() {
     if (_nameController.text.isEmpty) return;
-    
+
     final viewModel = ref.read(categoryProvider);
     final notifier = ref.read(categoryProvider.notifier);
-    
+
     if (_isEditing && viewModel.selectedCategory != null) {
       notifier.updateCategory(
         viewModel.selectedCategory!,
@@ -60,7 +62,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
         _selectedColor,
       );
     }
-    
+
     _resetForm();
   }
 
@@ -77,26 +79,31 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
   void _deleteCategory(Category category) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Delete'),
-        content: Text('Are you sure you want to delete ${category.name}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Confirm Delete'),
+            content: Text('Are you sure you want to delete ${category.name}?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  ref
+                      .read(categoryProvider.notifier)
+                      .deleteCategory(category.id);
+                  if (_isEditing &&
+                      ref.read(categoryProvider).selectedCategory?.id ==
+                          category.id) {
+                    _resetForm();
+                  }
+                },
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref.read(categoryProvider.notifier).deleteCategory(category.id);
-              if (_isEditing && ref.read(categoryProvider).selectedCategory?.id == category.id) {
-                _resetForm();
-              }
-            },
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -128,7 +135,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
 
   Widget _buildHeader() {
     final viewModel = ref.watch(categoryProvider);
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -157,7 +164,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
 
   Widget _buildCategoriesTable() {
     final viewModel = ref.watch(categoryProvider);
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -185,20 +192,18 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            Expanded(
-              child: _buildCategoriesList(viewModel),
-            ),
+            Expanded(child: _buildCategoriesList(viewModel)),
           ],
         ),
       ),
     );
   }
-  
+
   Widget _buildCategoriesList(CategoryViewModel viewModel) {
     if (viewModel.state == CategoryState.loading) {
       return const Center(child: CircularProgressIndicator());
     }
-    
+
     if (viewModel.state == CategoryState.error) {
       return Center(
         child: Column(
@@ -209,14 +214,15 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
             Text(viewModel.errorMessage ?? 'An error occurred'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => ref.read(categoryProvider.notifier).loadCategories(),
+              onPressed:
+                  () => ref.read(categoryProvider.notifier).loadCategories(),
               child: const Text('Retry'),
             ),
           ],
         ),
       );
     }
-    
+
     if (viewModel.categories.isEmpty) {
       return Center(
         child: Column(
@@ -234,14 +240,14 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
         ),
       );
     }
-    
+
     return ListView.separated(
       itemCount: viewModel.categories.length,
       separatorBuilder: (context, index) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final category = viewModel.categories[index];
         final isSelected = viewModel.selectedCategory?.id == category.id;
-        
+
         return ListTile(
           selected: isSelected,
           selectedTileColor: Colors.grey.withAlpha(20),
@@ -313,7 +319,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
               controller: _nameController,
               decoration: const InputDecoration(
                 labelText: 'Category Name',
-                hintText: 'Enter category name',
+                hintText: '',
               ),
             ),
             const SizedBox(height: 16),
@@ -321,7 +327,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
               controller: _descriptionController,
               decoration: const InputDecoration(
                 labelText: 'Description',
-                hintText: 'Enter category description',
+                hintText: '',
               ),
               maxLines: 3,
             ),
@@ -334,30 +340,39 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: colorOptions.map((color) {
-                    final isSelected = _selectedColor == color;
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedColor = color;
-                        });
-                      },
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                          border: isSelected
-                              ? Border.all(color: Colors.black, width: 2)
-                              : null,
-                        ),
-                        child: isSelected
-                            ? const Icon(Icons.check, color: Colors.white)
-                            : null,
-                      ),
-                    );
-                  }).toList(),
+                  children:
+                      colorOptions.map((color) {
+                        final isSelected = _selectedColor == color;
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedColor = color;
+                            });
+                          },
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                              border:
+                                  isSelected
+                                      ? Border.all(
+                                        color: Colors.black,
+                                        width: 2,
+                                      )
+                                      : null,
+                            ),
+                            child:
+                                isSelected
+                                    ? const Icon(
+                                      Icons.check,
+                                      color: Colors.white,
+                                    )
+                                    : null,
+                          ),
+                        );
+                      }).toList(),
                 ),
               ],
             ),
@@ -366,25 +381,28 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: viewModel.state == CategoryState.loading
-                        ? null
-                        : _resetForm,
+                    onPressed:
+                        viewModel.state == CategoryState.loading
+                            ? null
+                            : _resetForm,
                     child: const Text('Cancel'),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: viewModel.state == CategoryState.loading
-                        ? null
-                        : _saveCategory,
-                    child: viewModel.state == CategoryState.loading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(_isEditing ? 'Update' : 'Save'),
+                    onPressed:
+                        viewModel.state == CategoryState.loading
+                            ? null
+                            : _saveCategory,
+                    child:
+                        viewModel.state == CategoryState.loading
+                            ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                            : Text(_isEditing ? 'Update' : 'Save'),
                   ),
                 ),
               ],
@@ -394,6 +412,4 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
       ),
     );
   }
-
-
 }
