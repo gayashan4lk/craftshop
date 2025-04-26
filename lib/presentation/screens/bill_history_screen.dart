@@ -41,9 +41,10 @@ class _BillHistoryScreenState extends ConsumerState<BillHistoryScreen> {
 
     if (!billState.isLoading && billState.bills.isNotEmpty) {
       // If we have bills but no item counts, load them
-      if (_billItemCounts.isEmpty) {
-        _loadLineItemCounts(billState.bills);
-      }
+      // if (_billItemCounts.isEmpty) {
+      //   _loadLineItemCounts(billState.bills);
+      // }
+      _loadLineItemCounts(billState.bills);
     }
 
     // Also update when a bill is selected with line items
