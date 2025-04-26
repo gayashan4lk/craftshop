@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum NavigationItem { home, inventory, categories, reports }
+enum NavigationItem { home, inventory, categories, reports, debug }
 
 class SidebarNavigation extends StatelessWidget {
   final NavigationItem selectedItem;
@@ -72,6 +72,13 @@ class SidebarNavigation extends StatelessWidget {
           icon: Icons.bar_chart_rounded,
           title: 'Reports',
           item: NavigationItem.reports,
+        ),
+        const SizedBox(height: 20),
+        // Debug menu item
+        _buildNavItem(
+          icon: Icons.bug_report_rounded,
+          title: 'Debug',
+          item: NavigationItem.debug,
         ),
       ],
     );

@@ -4,7 +4,7 @@ import 'package:path_provider/path_provider.dart';
 
 class DatabaseHelper {
   static const _databaseName = "craftshop.db";
-  static const _databaseVersion = 1;
+  static const _databaseVersion = 2;
   
   // Singleton pattern
   DatabaseHelper._privateConstructor();
@@ -26,6 +26,7 @@ class DatabaseHelper {
       path,
       version: _databaseVersion,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
   
@@ -38,6 +39,32 @@ class DatabaseHelper {
         description TEXT NOT NULL,
         color_value INTEGER NOT NULL,
         item_count INTEGER DEFAULT 0
+      )
+    ''');
+    
+    // Create products table
+    await _createProductsTable(db);
+  }
+  
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Add products table in version 2
+      await _createProductsTable(db);
+    }
+  }
+  
+  Future<void> _createProductsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE products(
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        sku TEXT NOT NULL UNIQUE,
+        category_id TEXT NOT NULL,
+        price REAL NOT NULL,
+        stock INTEGER NOT NULL DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE
       )
     ''');
   }
