@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:craftshop/domain/models/product.dart';
+import 'package:craftshop/domain/models/line_item.dart';
 import 'package:craftshop/presentation/view_models/bill_view_model.dart';
 import 'package:craftshop/presentation/view_models/product_view_model.dart'
     show productProvider, ProductState;
@@ -242,70 +243,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return;
     }
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        int quantity = 1;
-        return AlertDialog(
-          title: Text('Add ${product.name}'),
-          content: StatefulBuilder(
-            builder: (context, setState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      const Text('Quantity: '),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        onPressed:
-                            quantity > 1
-                                ? () => setState(() => quantity--)
-                                : null,
-                        icon: const Icon(Icons.remove_circle_outline),
-                      ),
-                      Text(
-                        quantity.toString(),
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      IconButton(
-                        onPressed:
-                            quantity < product.stock
-                                ? () => setState(() => quantity++)
-                                : null,
-                        icon: const Icon(Icons.add_circle_outline),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Total: ${currencyFormat.format(product.price * quantity)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                ref
-                    .read(billProvider.notifier)
-                    .addLineItemFromProduct(product, quantity);
-              },
-              child: const Text('Add to Bill'),
-            ),
-          ],
-        );
-      },
+    // Directly add the product to the bill with quantity 1
+    ref.read(billProvider.notifier).addLineItemFromProduct(product, 1);
+
+    // Show a brief confirmation
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${product.name} added to bill'),
+        duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'View Bill',
+          onPressed: () {
+            // Optional: Add code here if you want to focus on the bill section
+          },
+        ),
+      ),
     );
   }
 
@@ -334,27 +287,96 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             itemBuilder: (context, index) {
               final lineItem = lineItems[index];
               return ListTile(
+                leading: IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 20),
+                  onPressed:
+                      () =>
+                          ref.read(billProvider.notifier).removeLineItem(index),
+                ),
+
                 contentPadding: EdgeInsets.zero,
                 title: Text(
                   lineItem.productName ?? 'Unknown Product',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                subtitle: Text(
-                  '${lineItem.quantity} x ${currencyFormat.format(lineItem.unitPrice)}',
+                subtitle: Row(
+                  children: [
+                    // Decrease quantity button
+                    IconButton(
+                      icon: const Icon(
+                        Icons.remove_circle_outline,
+                        size: 20,
+                        color: Colors.red,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      visualDensity: VisualDensity.compact,
+                      onPressed:
+                          lineItem.quantity > 1
+                              ? () {
+                                final updatedLineItem = LineItem.create(
+                                  billId: lineItem.billId,
+                                  productId: lineItem.productId,
+                                  productName: lineItem.productName,
+                                  quantity: lineItem.quantity - 1,
+                                  unitPrice: lineItem.unitPrice,
+                                  discount: lineItem.discount,
+                                );
+                                ref
+                                    .read(billProvider.notifier)
+                                    .updateLineItem(index, updatedLineItem);
+                              }
+                              : null,
+                    ),
+
+                    // Quantity display
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        '${lineItem.quantity}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+
+                    // Increase quantity button
+                    IconButton(
+                      icon: const Icon(
+                        Icons.add_circle_outline,
+                        size: 20,
+                        color: Colors.green,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () {
+                        final updatedLineItem = LineItem.create(
+                          billId: lineItem.billId,
+                          productId: lineItem.productId,
+                          productName: lineItem.productName,
+                          quantity: lineItem.quantity + 1,
+                          unitPrice: lineItem.unitPrice,
+                          discount: lineItem.discount,
+                        );
+                        ref
+                            .read(billProvider.notifier)
+                            .updateLineItem(index, updatedLineItem);
+                      },
+                    ),
+
+                    const SizedBox(width: 4),
+
+                    Text('x ${currencyFormat.format(lineItem.unitPrice)}'),
+                  ],
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       currencyFormat.format(lineItem.totalPrice),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, size: 20),
-                      onPressed:
-                          () => ref
-                              .read(billProvider.notifier)
-                              .removeLineItem(index),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
                   ],
                 ),
