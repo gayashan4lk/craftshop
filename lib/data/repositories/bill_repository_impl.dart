@@ -68,4 +68,32 @@ class BillRepositoryImpl implements BillRepository {
     final rows = await _databaseHelper.rawQuery(query, [limit]);
     return rows.map((row) => BillDatabaseExtension.fromMap(row)).toList();
   }
+  
+  @override
+  Future<Map<String, int>> getLineItemCountsForBills(List<String> billIds) async {
+    if (billIds.isEmpty) {
+      return {};
+    }
+    
+    // Prepare placeholders for SQL query (?,?,?) based on number of bill IDs
+    final placeholders = billIds.map((_) => '?').join(',');
+    
+    // Query to count line items per bill
+    final query = '''
+      SELECT bill_id, COUNT(*) as item_count 
+      FROM line_items 
+      WHERE bill_id IN ($placeholders) 
+      GROUP BY bill_id
+    ''';
+    
+    final rows = await _databaseHelper.rawQuery(query, billIds);
+    
+    // Convert to map of bill_id -> count
+    final countMap = <String, int>{};
+    for (final row in rows) {
+      countMap[row['bill_id'] as String] = row['item_count'] as int;
+    }
+    
+    return countMap;
+  }
 }

@@ -79,6 +79,7 @@ class BillNotifier extends StateNotifier<BillState> {
     state = state.copyWith(isLoading: true);
 
     try {
+      // Load all bills (line items are loaded separately in the UI)
       final bills = await _billRepository.getAllBills();
       state = state.copyWith(bills: bills, isLoading: false);
     } catch (e) {
@@ -108,6 +109,15 @@ class BillNotifier extends StateNotifier<BillState> {
     } catch (e) {
       state = state.copyWith(errorMessage: e.toString());
       rethrow;
+    }
+  }
+  
+  Future<Map<String, int>> getLineItemCountsForBills(List<String> billIds) async {
+    try {
+      return await _billRepository.getLineItemCountsForBills(billIds);
+    } catch (e) {
+      state = state.copyWith(errorMessage: e.toString());
+      return {};
     }
   }
 

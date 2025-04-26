@@ -5,6 +5,7 @@ import 'package:craftshop/presentation/screens/inventory_screen.dart';
 import 'package:craftshop/presentation/screens/reports_screen.dart';
 import 'package:craftshop/presentation/screens/categories_screen.dart';
 import 'package:craftshop/presentation/screens/debug_screen.dart';
+import 'package:craftshop/presentation/screens/bill_history_screen.dart';
 import 'package:craftshop/presentation/widgets/sidebar_navigation.dart';
 
 class MainScreen extends StatefulWidget {
@@ -48,6 +49,8 @@ class _MainScreenState extends State<MainScreen> {
         return const InventoryScreen();
       case NavigationItem.categories:
         return const CategoriesScreen();
+      case NavigationItem.bill_history:
+        return const BillHistoryScreen();
       case NavigationItem.reports:
         return const ReportsScreen();
       case NavigationItem.debug:
