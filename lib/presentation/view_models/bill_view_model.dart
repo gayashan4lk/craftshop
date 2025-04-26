@@ -198,14 +198,24 @@ class BillNotifier extends StateNotifier<BillState> {
 
     final billId = await _billRepository.addBill(bill, lineItems);
 
-    // Reset current bill state
+    // Reset current bill state including discount
+    state = state.copyWith(discountAmount: 0.0);
     _recalculateAmounts([]);
 
     return billId;
   }
 
   void clearCurrentBill() {
+    // Reset discount amount to zero and clear line items
+    state = state.copyWith(discountAmount: 0.0);
     _recalculateAmounts([]);
+    
+    // Also reset the UI state for created bills
+    state = state.copyWith(
+      creationStatus: BillCreationStatus.idle,
+      createdBillId: null,
+      errorMessage: null
+    );
   }
 
   Future<void> deleteBill(String id) async {

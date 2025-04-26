@@ -25,6 +25,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Load products when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(productProvider.notifier).loadProducts();
+      // Initialize discount controller with current value
+      _discountController.text = ref.read(billProvider).discountAmount.toString();
     });
   }
 
@@ -392,6 +394,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Consumer(
       builder: (context, ref, child) {
         final billState = ref.watch(billProvider);
+        
+        // Update discount controller text when bill state changes
+        // This ensures the text field updates when bill is cleared
+        if (_discountController.text != billState.discountAmount.toString()) {
+          _discountController.text = billState.discountAmount.toString();
+        }
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
@@ -414,18 +422,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Text('Discount'),
-                  Row(
-                    children: [
-                      Text(
-                        '-${currencyFormat.format(billState.discountAmount)}',
+                  SizedBox(
+                    width: 120,
+                    height: 40,
+                    child: TextField(
+                      controller: _discountController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(fontSize: 14),
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                        prefixText: '\$',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Theme.of(context).primaryColor),
+                        ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.edit, size: 16),
-                        onPressed: () => _showDiscountDialog(context),
-                      ),
-                    ],
+                      onSubmitted: (value) {
+                        final discountAmount = double.tryParse(value) ?? 0.0;
+                        ref.read(billProvider.notifier).setDiscountAmount(discountAmount);
+                      },
+                      onTapOutside: (_) {
+                        // Apply discount when user taps outside
+                        final discountAmount = double.tryParse(_discountController.text) ?? 0.0;
+                        ref.read(billProvider.notifier).setDiscountAmount(discountAmount);
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -453,42 +482,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _showDiscountDialog(BuildContext context) {
-    final billNotifier = ref.read(billProvider.notifier);
-    _discountController.text = ref.read(billProvider).discountAmount.toString();
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Add Discount'),
-          content: TextField(
-            controller: _discountController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Discount Amount',
-              prefixText: '\$',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final discountAmount =
-                    double.tryParse(_discountController.text) ?? 0.0;
-                billNotifier.setDiscountAmount(discountAmount);
-                Navigator.pop(context);
-              },
-              child: const Text('Apply'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   Widget _buildActionButtons() {
     return Consumer(
