@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:craftshop/presentation/screens/home_screen.dart';
 import 'package:craftshop/presentation/screens/inventory_screen.dart';
 import 'package:craftshop/presentation/screens/reports_screen.dart';
+import 'package:craftshop/presentation/screens/categories_screen.dart';
 import 'package:craftshop/presentation/widgets/sidebar_navigation.dart';
 
 class MainScreen extends StatefulWidget {
@@ -43,6 +44,8 @@ class _MainScreenState extends State<MainScreen> {
         return const HomeScreen();
       case NavigationItem.inventory:
         return const InventoryScreen();
+      case NavigationItem.categories:
+        return const CategoriesScreen();
       case NavigationItem.reports:
         return const ReportsScreen();
     }
