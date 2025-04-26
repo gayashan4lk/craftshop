@@ -9,4 +9,5 @@ abstract class BillRepository {
   Future<void> deleteBill(String id);
   Future<int> getBillCount();
   Future<List<Bill>> getRecentBills(int limit);
+  Future<Map<String, int>> getLineItemCountsForBills(List<String> billIds);
 }

@@ -68,4 +68,22 @@ class BillRepositoryImpl implements BillRepository {
     final rows = await _databaseHelper.rawQuery(query, [limit]);
     return rows.map((row) => BillDatabaseExtension.fromMap(row)).toList();
   }
+  
+  @override
+  Future<Map<String, int>> getLineItemCountsForBills(List<String> billIds) async {
+    if (billIds.isEmpty) {
+      return {};
+    }
+    
+    // Instead of a complex query, just iterate through the bills and count items
+    final countMap = <String, int>{};
+    
+    for (final billId in billIds) {
+      // Get all line items for this bill 
+      final lineItems = await _lineItemRepository.getLineItemsByBillId(billId);
+      countMap[billId] = lineItems.length;
+    }
+    
+    return countMap;
+  }
 }

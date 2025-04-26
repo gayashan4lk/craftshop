@@ -7,7 +7,7 @@ class LineItemRepositoryImpl implements LineItemRepository {
   static const String tableName = 'line_items';
 
   LineItemRepositoryImpl({DatabaseHelper? databaseHelper})
-      : _databaseHelper = databaseHelper ?? DatabaseHelper.instance;
+    : _databaseHelper = databaseHelper ?? DatabaseHelper.instance;
 
   @override
   Future<List<LineItem>> getLineItemsByBillId(String billId) async {
@@ -16,7 +16,9 @@ class LineItemRepositoryImpl implements LineItemRepository {
                   LEFT JOIN products p ON li.product_id = p.id 
                   WHERE li.bill_id = ?''';
     final rows = await _databaseHelper.rawQuery(query, [billId]);
-    return rows.map((row) => LineItemDatabaseExtension.fromMap(row)).toList();
+    final lineItems =
+        rows.map((row) => LineItemDatabaseExtension.fromMap(row)).toList();
+    return lineItems;
   }
 
   @override
@@ -29,7 +31,7 @@ class LineItemRepositoryImpl implements LineItemRepository {
   Future<void> addLineItem(LineItem lineItem) async {
     await _databaseHelper.insert(tableName, lineItem.toMap());
   }
-  
+
   @override
   Future<void> addMultipleLineItems(List<LineItem> lineItems) async {
     final batch = await _databaseHelper.beginBatch();
@@ -48,7 +50,7 @@ class LineItemRepositoryImpl implements LineItemRepository {
   Future<void> deleteLineItem(String id) async {
     await _databaseHelper.delete(tableName, id);
   }
-  
+
   @override
   Future<void> deleteLineItemsByBillId(String billId) async {
     const query = 'DELETE FROM $tableName WHERE bill_id = ?';
