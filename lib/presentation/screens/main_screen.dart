@@ -3,6 +3,7 @@ import 'package:craftshop/presentation/screens/home_screen.dart';
 import 'package:craftshop/presentation/screens/inventory_screen.dart';
 import 'package:craftshop/presentation/screens/reports_screen.dart';
 import 'package:craftshop/presentation/screens/categories_screen.dart';
+import 'package:craftshop/presentation/screens/debug_screen.dart';
 import 'package:craftshop/presentation/widgets/sidebar_navigation.dart';
 
 class MainScreen extends StatefulWidget {
@@ -48,6 +49,8 @@ class _MainScreenState extends State<MainScreen> {
         return const CategoriesScreen();
       case NavigationItem.reports:
         return const ReportsScreen();
+      case NavigationItem.debug:
+        return const DebugScreen();
     }
   }
 }
