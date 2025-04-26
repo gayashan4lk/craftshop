@@ -26,7 +26,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(productProvider.notifier).loadProducts();
       // Initialize discount controller with current value
-      _discountController.text = ref.read(billProvider).discountAmount.toString();
+      _discountController.text =
+          ref.read(billProvider).discountAmount.toString();
     });
   }
 
@@ -247,21 +248,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     // Directly add the product to the bill with quantity 1
     ref.read(billProvider.notifier).addLineItemFromProduct(product, 1);
-
-    // Show a brief confirmation
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.name} added to bill'),
-        duration: const Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(
-          label: 'View Bill',
-          onPressed: () {
-            // Optional: Add code here if you want to focus on the bill section
-          },
-        ),
-      ),
-    );
   }
 
   Widget _buildLineItemsList() {
@@ -394,7 +380,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Consumer(
       builder: (context, ref, child) {
         final billState = ref.watch(billProvider);
-        
+
         // Update discount controller text when bill state changes
         // This ensures the text field updates when bill is cleared
         if (_discountController.text != billState.discountAmount.toString()) {
@@ -430,11 +416,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     height: 40,
                     child: TextField(
                       controller: _discountController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       textAlign: TextAlign.right,
                       style: const TextStyle(fontSize: 14),
                       decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 12,
+                        ),
                         prefixText: '\$',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -442,17 +433,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Theme.of(context).primaryColor),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).primaryColor,
+                          ),
                         ),
                       ),
                       onSubmitted: (value) {
                         final discountAmount = double.tryParse(value) ?? 0.0;
-                        ref.read(billProvider.notifier).setDiscountAmount(discountAmount);
+                        ref
+                            .read(billProvider.notifier)
+                            .setDiscountAmount(discountAmount);
                       },
                       onTapOutside: (_) {
                         // Apply discount when user taps outside
-                        final discountAmount = double.tryParse(_discountController.text) ?? 0.0;
-                        ref.read(billProvider.notifier).setDiscountAmount(discountAmount);
+                        final discountAmount =
+                            double.tryParse(_discountController.text) ?? 0.0;
+                        ref
+                            .read(billProvider.notifier)
+                            .setDiscountAmount(discountAmount);
                       },
                     ),
                   ),
@@ -481,8 +479,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       },
     );
   }
-
-
 
   Widget _buildActionButtons() {
     return Consumer(
