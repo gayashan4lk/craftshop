@@ -12,11 +12,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
   String _selectedPeriod = 'This Month';
   final List<String> _periods = [
     'Today',
-    'This Week', 
+    'This Week',
     'This Month',
     'This Quarter',
     'This Year',
-    'Custom Range'
+    'Custom Range',
   ];
 
   @override
@@ -34,15 +34,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  flex: 3,
-                  child: _buildSalesChart(),
-                ),
+                Expanded(flex: 3, child: _buildSalesChart()),
                 const SizedBox(width: 24),
-                Expanded(
-                  flex: 2,
-                  child: _buildTopSellingProducts(),
-                ),
+                Expanded(flex: 2, child: _buildTopSellingProducts()),
               ],
             ),
           ),
@@ -59,10 +53,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       children: [
         const Text(
           'Reports',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
         ),
         Row(
           children: [
@@ -82,13 +73,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       });
                     }
                   },
-                  items: _periods
-                      .map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
+                  items:
+                      _periods.map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
                 ),
               ),
             ),
@@ -153,10 +144,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             children: [
               Text(
                 title,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
               const SizedBox(height: 12),
               Text(
@@ -184,11 +172,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    'vs. previous period',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
+                    'vs. previous',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
                 ],
               ),
@@ -211,16 +196,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
               children: [
                 const Text(
                   'Sales Trend',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 SegmentedButton<String>(
                   segments: const [
                     ButtonSegment<String>(value: 'Daily', label: Text('Daily')),
-                    ButtonSegment<String>(value: 'Weekly', label: Text('Weekly')),
-                    ButtonSegment<String>(value: 'Monthly', label: Text('Monthly')),
+                    ButtonSegment<String>(
+                      value: 'Weekly',
+                      label: Text('Weekly'),
+                    ),
+                    ButtonSegment<String>(
+                      value: 'Monthly',
+                      label: Text('Monthly'),
+                    ),
                   ],
                   selected: const {'Weekly'},
                   onSelectionChanged: (Set<String> newSelection) {
@@ -252,9 +240,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (double value, TitleMeta meta) {
-                          const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                          const weeks = [
+                            'Week 1',
+                            'Week 2',
+                            'Week 3',
+                            'Week 4',
+                          ];
                           final index = value.toInt();
-                          
+
                           if (index >= 0 && index < weeks.length) {
                             return Padding(
                               padding: const EdgeInsets.only(top: 8.0),
@@ -323,10 +316,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               children: [
                 Text(
                   'Top Selling Products',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Icon(Icons.more_vert),
               ],
@@ -340,7 +330,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     name: 'Product ${index + 1}',
                     sales: (100 - index * 15).toString(),
                     amount: '\$${(500 - index * 75).toStringAsFixed(2)}',
-                    growth: index < 3 ? '+${(20 - index * 5).toString()}%' : '-${(index * 2).toString()}%',
+                    growth:
+                        index < 3
+                            ? '+${(20 - index * 5).toString()}%'
+                            : '-${(index * 2).toString()}%',
                     isUp: index < 3,
                   ),
                 ),
@@ -370,12 +363,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.grey[200]!,
-            width: 1,
-          ),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.grey[200]!, width: 1)),
       ),
       child: Row(
         children: [
@@ -386,28 +374,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
               color: Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Center(
-              child: Icon(Icons.shopping_bag_outlined),
-            ),
+            child: const Center(child: Icon(Icons.shopping_bag_outlined)),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
                 const SizedBox(height: 4),
                 Text(
                   '$sales items sold',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
             ),
@@ -415,12 +393,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                amount,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text(amount, style: const TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
               Row(
                 children: [
@@ -474,10 +447,22 @@ class _ReportsScreenState extends State<ReportsScreen> {
                           centerSpaceRadius: 60,
                           sections: [
                             _buildPieChartSection('Clothing', 40, Colors.blue),
-                            _buildPieChartSection('Accessories', 25, Colors.green),
-                            _buildPieChartSection('Home Decor', 15, Colors.orange),
+                            _buildPieChartSection(
+                              'Accessories',
+                              25,
+                              Colors.green,
+                            ),
+                            _buildPieChartSection(
+                              'Home Decor',
+                              15,
+                              Colors.orange,
+                            ),
                             _buildPieChartSection('Jewelry', 12, Colors.purple),
-                            _buildPieChartSection('Art Supplies', 8, Colors.red),
+                            _buildPieChartSection(
+                              'Art Supplies',
+                              8,
+                              Colors.red,
+                            ),
                           ],
                         ),
                       ),
@@ -509,7 +494,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  PieChartSectionData _buildPieChartSection(String title, double value, Color color) {
+  PieChartSectionData _buildPieChartSection(
+    String title,
+    double value,
+    Color color,
+  ) {
     return PieChartSectionData(
       color: color,
       value: value,
@@ -523,26 +512,23 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  Widget _buildCategoryLegendItem(String category, double percentage, Color color) {
+  Widget _buildCategoryLegendItem(
+    String category,
+    double percentage,
+    Color color,
+  ) {
     return Row(
       children: [
         Container(
           width: 16,
           height: 16,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 8),
-        Expanded(
-          child: Text(category),
-        ),
+        Expanded(child: Text(category)),
         Text(
           '$percentage%',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ],
     );
