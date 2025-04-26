@@ -517,9 +517,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         TextButton(
                           onPressed: () {
                             Navigator.pop(ctx);
-                            ref
-                                .read(billProvider.notifier)
-                                .resetCreationStatus();
+                            // Reset bill creation status
+                            ref.read(billProvider.notifier).resetCreationStatus();
+                            
+                            // Refresh product list to show updated stock values
+                            ref.read(productProvider.notifier).loadProducts();
                           },
                           child: const Text('OK'),
                         ),

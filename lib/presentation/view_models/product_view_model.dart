@@ -218,6 +218,40 @@ class ProductNotifier extends StateNotifier<ProductViewModel> {
 
     state = state.copyWith(filteredProducts: filtered);
   }
+  
+  // Update product stock quantity
+  Future<bool> updateProductStock(String productId, int quantityToReduce) async {
+    try {
+      // Find the product in current state
+      final product = state.products.firstWhere(
+        (p) => p.id == productId,
+        orElse: () => throw Exception('Product not found'),
+      );
+      
+      // Check if we have enough inventory
+      if (product.stock < quantityToReduce) {
+        _logger.warning('Not enough stock for product ${product.name}');
+        return false;
+      }
+      
+      // Calculate new stock level
+      final newStock = product.stock - quantityToReduce;
+      
+      // Create updated product with new stock level
+      final updatedProduct = product.copyWith(stock: newStock);
+      
+      // Update in repository
+      await _productRepository.updateProduct(updatedProduct);
+      
+      // Refresh product list to reflect changes
+      await loadProducts();
+      
+      return true;
+    } catch (e) {
+      _logger.severe('Error updating product stock: $e');
+      return false;
+    }
+  }
 }
 
 final productProvider =

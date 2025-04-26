@@ -241,6 +241,50 @@ class BillNotifier extends StateNotifier<BillState> {
         return;
       }
 
+      // Get product repository to update inventory
+      final productRepository = getIt<ProductRepository>();
+      
+      // Track inventory updates to make
+      final inventoryUpdates = <String, int>{};
+      
+      // Aggregate quantities by product ID
+      for (final lineItem in state.currentLineItems) {
+        final productId = lineItem.productId;
+        final quantity = lineItem.quantity;
+        
+        // Add to inventory updates (combine quantities for same product)
+        inventoryUpdates[productId] = (inventoryUpdates[productId] ?? 0) + quantity;
+      }
+      
+      // Check stock levels and update inventory
+      for (final entry in inventoryUpdates.entries) {
+        final productId = entry.key;
+        final quantityToReduce = entry.value;
+        
+        // Get current product to check inventory
+        final product = await productRepository.getProductById(productId);
+        if (product == null) {
+          state = state.copyWith(
+            creationStatus: BillCreationStatus.error,
+            errorMessage: 'Product not found in inventory',
+          );
+          return;
+        }
+        
+        // Check if we have enough inventory
+        if (product.stock < quantityToReduce) {
+          state = state.copyWith(
+            creationStatus: BillCreationStatus.error,
+            errorMessage: 'Insufficient stock for ${product.name}',
+          );
+          return;
+        }
+        
+        // Update product inventory
+        final updatedProduct = product.copyWith(stock: product.stock - quantityToReduce);
+        await productRepository.updateProduct(updatedProduct);
+      }
+
       // Save the bill and get ID
       final billId = await saveBill();
 
